@@ -1,52 +1,56 @@
 package sistema_reservas_spring.controlador;
 
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.HashMap;
-import java.util.Map;
+
+import sistema_reservas_spring.modelo.Usuario;
+import sistema_reservas_spring.repositorio.UsuarioRepository;
+
+import java.util.Optional;
 
 /**
- * Controlador REST para gestionar el inicio de sesión y registro de usuarios.
- * Evidencia: GA7-220501096-AA5-EV01
+ * Servicio Web para la Autenticación de Usuarios.
+ * Evidencia GA7-220501096-AA5-EV01
  */
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*") // Permite la comunicación con el frontend en React
+@CrossOrigin(origins = "http://localhost:5173") 
 public class AuthController {
 
-    // Simulación de almacenamiento credenciales en memoria para la validación del caso
-    private Map<String, String> baseDeDatosUsuarios = new HashMap<>();
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     /**
-     * Endpoint para registrar un usuario
+     * Servicio para registrar un nuevo usuario en el sistema.
+     * @param usuario Objeto con los datos del usuario (correo, contrasena, etc.)
+     * @return Mensaje confirmando el registro.
      */
     @PostMapping("/registro")
-    public ResponseEntity<String> registrarUsuario(@RequestBody Map<String, String> credenciales) {
-        String usuario = credenciales.get("usuario");
-        String contrasena = credenciales.get("contrasena");
-
-        if (usuario == null || contrasena == null || usuario.isEmpty() || contrasena.isEmpty()) {
-            return ResponseEntity.badRequest().body("Faltan datos requeridos");
-        }
-
-        baseDeDatosUsuarios.put(usuario, contrasena);
-        return ResponseEntity.ok("Registro exitoso");
+    public ResponseEntity<String> registrarUsuario(@RequestBody Usuario usuario) {
+        // Guardamos el usuario recibido en la base de datos
+        usuarioRepository.save(usuario);
+        return ResponseEntity.ok("Usuario registrado exitosamente");
     }
 
     /**
-     * Endpoint para iniciar sesión que valida las credenciales y responde
-     * con los mensajes de éxito o error solicitados en la actividad.
+     * Servicio para el inicio de sesión (Login).
+     * @param credenciales Objeto con el correo y la contraseña ingresados.
+     * @return Mensaje de éxito o error según la validación.
      */
     @PostMapping("/login")
-    public ResponseEntity<String> iniciarSesion(@RequestBody Map<String, String> credenciales) {
-        String usuario = credenciales.get("usuario");
-        String contrasena = credenciales.get("contrasena");
+    public ResponseEntity<String> iniciarSesion(@RequestBody Usuario credenciales) {
+        
+        // 1. Buscamos al usuario en la base de datos usando su correo
+        Optional<Usuario> usuarioEncontrado = usuarioRepository.findByCorreo(credenciales.getCorreo());
 
-        if (baseDeDatosUsuarios.containsKey(usuario) && baseDeDatosUsuarios.get(usuario).equals(contrasena)) {
+        // 2. Validamos si el usuario existe y si la contraseña coincide
+        if (usuarioEncontrado.isPresent() && usuarioEncontrado.get().getContrasena().equals(credenciales.getContrasena())) {
+            // Autenticación correcta según el caso de estudio
             return ResponseEntity.ok("Autenticación satisfactoria");
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Error en la autenticación");
+            // Fallo en la autenticación (correo no existe o contraseña incorrecta)
+            return ResponseEntity.status(401).body("Error en la autenticación");
         }
     }
 }
