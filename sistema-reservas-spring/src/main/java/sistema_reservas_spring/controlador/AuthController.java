@@ -44,13 +44,18 @@ public class AuthController {
         // 1. Buscamos al usuario en la base de datos usando su correo
         Optional<Usuario> usuarioEncontrado = usuarioRepository.findByCorreo(credenciales.getCorreo());
 
-        // 2. Validamos si el usuario existe y si la contraseña coincide
-        if (usuarioEncontrado.isPresent() && usuarioEncontrado.get().getContrasena().equals(credenciales.getContrasena())) {
-            // Autenticación correcta según el caso de estudio
-            return ResponseEntity.ok("Autenticación satisfactoria");
-        } else {
-            // Fallo en la autenticación (correo no existe o contraseña incorrecta)
-            return ResponseEntity.status(401).body("Error en la autenticación");
+        // 2. Validamos si el usuario existe
+        if (usuarioEncontrado.isPresent()) {
+            Usuario usuario = usuarioEncontrado.get();
+            
+            // Validamos primero que la contraseña de la BD no sea nula antes de comparar
+            if (usuario.getContrasena() != null && usuario.getContrasena().equals(credenciales.getContrasena())) {
+                // Autenticación correcta según el caso de estudio
+                return ResponseEntity.ok("Autenticación satisfactoria");
+            }
         }
+        
+        // Si no existe, es nula o no coincide, devolvemos el error de autenticación exigido
+        return ResponseEntity.status(401).body("Error en la autenticación");
     }
 }
