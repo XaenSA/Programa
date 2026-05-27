@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Reservas</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header>
+        <h1>Sistema de Reservas</h1>
+        <nav>
+            <button onclick="mostrarSeccion('inicio')">Inicio</button>
+            <button onclick="mostrarSeccion('login')">Login</button>
+            <button onclick="mostrarSeccion('servicios')">Servicios</button>
+            <button onclick="mostrarSeccion('reservas')">Reservar</button>
+        </nav>
+    </header>
+
+    <main>
+
+        <section id="inicio" class="seccion activa">
+            <h2>Bienvenido</h2>
+            <p>Aplicación web para la gestión de reservas de servicios.</p>
+        </section>
+
+        <section id="login" class="seccion">
+            <h2>Iniciar Sesión</h2>
+            <form onsubmit="return validarLogin()">
+                <label>Email</label>
+                <input type="email" id="email" required>
+
+                <label>Contraseña</label>
+                <input type="password" id="password" required>
+
+                <button type="submit">Ingresar</button>
+            </form>
+        </section>
+
+        <section id="servicios" class="seccion">
+            <h2>Servicios Disponibles</h2>
+            <ul>
+                <li>Corte de cabello</li>
+                <li>Consulta médica</li>
+                <li>Asesoría técnica</li>
+            </ul>
+        </section>
+
+        <section id="reservas" class="seccion">
+            <h2>Realizar Reserva</h2>
+            <form onsubmit="return realizarReserva()">
+                <label>Fecha</label>
+                <input type="date" required>
+
+                <label>Hora</label>
+                <input type="time" required>
+
+                <button type="submit">Reservar</button>
+            </form>
+        </section>
+
+    </main>
+
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Prototipo - Login / Registro / Error</title>
+  <style>
+    :root{
+      --bg: #F5F6FA;
+      --primary: #007BFF;
+      --error: #DC3545;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --radius: 10px;
+      --shadow: 0 6px 18px rgba(15,23,42,0.06);
+      --maxw: 420px;
+      --font: "Arial", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:var(--bg);
+      color:#111827;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+
+    .frame{
+      width:100%;
+      max-width:calc(var(--maxw) + 40px);
+      display:grid;
+      grid-template-columns:1fr;
+      gap:16px;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:20px;
+    }
+
+    header.app-header{
+      text-align:center;
+      margin-bottom:6px;
+    }
+    header.app-header h1{
+      margin:6px 0 0;
+      font-size:18px;
+      font-weight:700;
+    }
+    header.app-header p{margin:0;color:var(--muted);font-size:13px}
+
+    form{display:flex;flex-direction:column;gap:12px}
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    label{
+      font-size:13px;
+      color:#0f172a;
+    }
+    input, button, select{
+      padding:10px 12px;
+      font-size:14px;
+      border-radius:8px;
+      border:1px solid #e6e9ee;
+      outline:none;
+      background:transparent;
+    }
+    input:focus{box-shadow:0 0 0 3px rgba(0,123,255,0.08); border-color:var(--primary)}
+    small.hint{font-size:12px;color:var(--muted)}
+    .row{display:flex;gap:10px}
+    .row .field{flex:1}
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      cursor:pointer;
+      border:0;
+      color:white;
+      background:var(--primary);
+      padding:10px 14px;
+      border-radius:8px;
+      font-weight:600;
+      font-size:14px;
+    }
+    .btn.secondary{
+      background:transparent;
+      color:var(--primary);
+      border:1px solid #d6e9ff;
+    }
+    .btn--danger{background:var(--error)}
+
+    .text-center{ text-align:center }
+    .muted{ color:var(--muted); font-size:13px }
+
+    .error-box{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      background:#fff6f6;
+      border:1px solid rgba(220,53,69,0.12);
+      color:var(--error);
+      padding:12px;
+      border-radius:8px;
+    }
+
+    .screen{ display:none }
+    .screen.active{ display:block }
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(2,6,23,0.45);
+      z-index:120;
+      padding:16px;
+    }
+    .overlay.open{ display:flex }
+    .modal{
+      width:100%;
+      max-width:420px;
+      background:var(--card);
+      border-radius:10px;
+      padding:18px;
+      box-shadow:var(--shadow);
+    }
+    .modal h3{margin:0 0 6px}
+    .modal p{margin:0 0 12px;color:var(--muted)}
+    .modal .actions{display:flex;gap:10px;justify-content:flex-end}
+
+    @media (max-width:440px){
+      .row{flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+  <main class="frame" role="main" aria-label="Prototipo pantallas">
+    <div class="card" style="text-align:center;">
+      <div class="app-logo" aria-hidden="true">
+        <!-- simple logo -->
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" style="display:inline-block">
+          <rect width="24" height="24" rx="6" fill="var(--primary)"></rect>
+          <text x="12" y="16" text-anchor="middle" font-size="12" font-family="Arial" fill="#fff">S</text>
+        </svg>
+      </div>
+      <header class="app-header">
+        <h1>App de Reservas - Prototipo</h1>
+        <p>Login · Registro · Manejo de errores</p>
+      </header>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
+        <button class="btn secondary" type="button" id="nav-login">Login</button>
+        <button class="btn secondary" type="button" id="nav-register">Registro</button>
+      </div>
+    </div>
+    <section id="screen-login" class="card screen active" aria-labelledby="login-title">
+      <h2 id="login-title" style="margin:0 0 6px">Validación de Usuario</h2>
+      <p class="muted" style="margin:0 0 12px">Ingresa tu usuario y contraseña para acceder.</p>
+
+      <form id="form-login" novalidate>
+        <div class="field">
+          <label for="login-user">Usuario o correo electrónico</label>
+          <input id="login-user" name="user" type="text" placeholder="ejemplo@correo.com" autocomplete="username" required aria-required="true" />
+          <small class="hint">Puede usar correo o nombre de usuario</small>
+        </div>
+
+        <div class="field">
+          <label for="login-pass">Contraseña</label>
+          <input id="login-pass" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required minlength="6" aria-required="true" />
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center;justify-content:space-between">
+          <small class="muted">¿Olvidaste tu contraseña?</small>
+          <div style="display:flex;gap:8px">
+            <button class="btn" type="submit">Ingresar</button>
+            <button class="btn secondary" type="button" id="to-register-1">Registrar</button>
+          </div>
+        </div>
+
+        <div id="login-feedback" aria-live="polite"></div>
+      </form>
+    </section>
+    <section id="screen-register" class="card screen" aria-labelledby="reg-title">
+      <h2 id="reg-title" style="margin:0 0 6px">Registro de Usuario</h2>
+      <p class="muted" style="margin:0 0 12px">Complete sus datos personales</p>
+
+      <form id="form-register" novalidate>
+        <div class="row">
+          <div class="field">
+            <label for="r-names">Nombres</label>
+            <input id="r-names" name="names" type="text" placeholder="Juan" required aria-required="true" />
+          </div>
+
+          <div class="field">
+            <label for="r-surnames">Apellidos</label>
+            <input id="r-surnames" name="surnames" type="text" placeholder="Pérez" required aria-required="true" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="r-id">Cédula</label>
+            <input id="r-id" name="cedula" type="text" inputmode="numeric" placeholder="1234567890" required aria-required="true" />
+            <small class="hint">Solo números, sin puntos ni guiones</small>
+          </div>
+
+          <div class="field">
+            <label for="r-dob">Fecha de nacimiento</label>
+            <input id="r-dob" name="dob" type="date" required aria-required="true" />
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">
+          <button class="btn secondary" type="button" id="to-login-1">Volver</button>
+          <button class="btn" type="submit">Registrar</button>
+        </div>
+
+        <div id="register-feedback" aria-live="polite"></div>
+      </form>
+    </section>
+
+    <section id="screen-error" class="card screen" aria-labelledby="err-title">
+      <h2 id="err-title" style="margin:0 0 6px">Notificación / Error</h2>
+      <div id="error-content" class="error-box" role="alert" aria-live="assertive">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" fill="#fff0f1" stroke="rgba(220,53,69,0.12)"></circle>
+          <path d="M12 7v6" stroke="var(--error)" stroke-width="2" stroke-linecap="round"></path>
+          <path d="M12 16h.01" stroke="var(--error)" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+        <div>
+          <strong id="error-title-text">Error:</strong>
+          <div id="error-msg" style="margin-top:6px;color:#611320"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button class="btn secondary" id="error-back">Volver</button>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document">
+      <h3 id="modal-title">Atención</h3>
+      <p id="modal-text">Mensaje de ejemplo.</p>
+      <div class="actions">
+        <button class="btn secondary" id="modal-close">Cerrar</button>
+        <button class="btn" id="modal-ok">Aceptar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const screens = {
+      login: document.getElementById('screen-login'),
+      register: document.getElementById('screen-register'),
+      error: document.getElementById('screen-error')
+    };
+
+    function showScreen(name){
+      for(const s of Object.values(screens)) s.classList.remove('active');
+      screens[name].classList.add('active');
+      // move focus to heading for accessibility
+      const heading = screens[name].querySelector('h2');
+      if(heading) heading.focus?.();
+    }
+    document.getElementById('nav-login').addEventListener('click', ()=> showScreen('login'));
+    document.getElementById('nav-register').addEventListener('click', ()=> showScreen('register'));
+    document.getElementById('to-register-1').addEventListener('click', ()=> showScreen('register'));
+    document.getElementById('to-login-1').addEventListener('click', ()=> showScreen('login'));
+    document.getElementById('error-back').addEventListener('click', ()=> showScreen('login'));
+
+    const overlay = document.getElementById('overlay');
+    const modalTitle = document.getElementById('modal-title');
+    const modalText = document.getElementById('modal-text');
+    document.getElementById('modal-close').addEventListener('click', ()=> closeModal());
+    document.getElementById('modal-ok').addEventListener('click', ()=> closeModal());
+
+    function openModal(title, text){
+      modalTitle.textContent = title;
+      modalText.textContent = text;
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden','false');
+      document.getElementById('modal-close').focus();
+    }
+    function closeModal(){
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden','true');
+    }
+    const loginForm = document.getElementById('form-login');
+    const loginFeedback = document.getElementById('login-feedback');
+    loginForm.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      loginFeedback.innerHTML = '';
+      const user = document.getElementById('login-user').value.trim();
+      const pass = document.getElementById('login-pass').value;
+      if(!user || !pass){
+        showError('Usuario o contraseña vacíos. Por favor complete los campos.');
+        return;
+      }
+      if(pass.length < 6){
+        showError('La contraseña debe tener al menos 6 caracteres.');
+        return;
+      }
+      // Para demo: aceptar si usuario contiene "user" y contraseña "123456"
+      if( (user.includes('@') || user.length>2) && pass.length>=6 ){
+        openModal('Acceso permitido', 'Bienvenido, se autenticó correctamente (simulación).');
+      } else {
+        showError('Credenciales inválidas. Verifique e intente de nuevo.');
+      }
+    });
+
+    const regForm = document.getElementById('form-register');
+    const regFeedback = document.getElementById('register-feedback');
+    regForm.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      regFeedback.innerHTML = '';
+      const names = document.getElementById('r-names').value.trim();
+      const surn = document.getElementById('r-surnames').value.trim();
+      const ced = document.getElementById('r-id').value.trim();
+      const dob = document.getElementById('r-dob').value;
+      if(!names || !surn || !ced || !dob){
+        showError('Complete todos los campos obligatorios para registrarse.');
+        return;
+      }
+      const cedRe = /^[0-9]{6,12}$/;
+      if(!cedRe.test(ced)){
+        showError('La cédula debe contener solo números (6 a 12 dígitos).');
+        return;
+      }
+      if(new Date(dob) > new Date()){
+        showError('La fecha de nacimiento no puede ser posterior al día de hoy.');
+        return;
+      }
+      openModal('Registro exitoso', 'Usuario registrado correctamente (simulación). Puede iniciar sesión ahora.');
+      regForm.reset();
+      showScreen('login');
+    });
+
+    function showError(message){
+      document.getElementById('error-msg').textContent = message;
+      document.getElementById('error-title-text').textContent = 'Error:';
+      showScreen('error');
+    }
+    window.addEventListener('keydown', (ev)=>{
+      if(ev.key === 'Escape'){
+        if(overlay.classList.contains('open')) closeModal();
+      }
+    });
+  </script>
+</body>
+</html>
